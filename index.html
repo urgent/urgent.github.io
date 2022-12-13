@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -48,6 +49,7 @@
          * - Show a satellite map of the weather in Brentwood.
          * - Request a user's phone number and send them an SMS with the weather.
          */
+        
         class Test {
             constructor() {
                 this.testResults = document.getElementsByClassName('test-results');
@@ -55,18 +57,48 @@
 
             async run() {
                 console.log(new Date().toISOString(), '[Test]', 'Running the test');
+                let lat = 36.0331;
+                let long = 86.7828;
+                
+                
+                try {
+                    // Geolocation API
+                    navigator.geolocation.getCurrentPosition((position) => {
+                        lat = position.coords.latitude;
+                        long = position.coords.longitude;
+                    });
+                    // Make the API call and handle the results 
+                    const response = await axios.get(`https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${long}&appid=25e989bd41e3e24ce13173d8126e0fd6`);
+                    const {weather, main} = response.data;
+                    this.setResults(response.data)
+                } catch (error) {
+                    // don't swallow errors
+                    console.log(error);
+                    // output to DOM
+                    if (error.response) {
+                        this.setError(`${error.response.status}: ${error.response.data.message}`);
+                    } else if(error.request) {
+                        this.setError(error.request)
+                    } else {
+                        this.setError('Service Outage');
+                    }
+                }
 
-                // TODO: Make the API call and handle the results
             }
 
             setError(message) {
-                // TODO: Format the error
-                this.testResults.innerHTML = (message || '').toString();
+                // method requires testResults property to be an array
+                if (this.testResults.length > 0) {
+                    // use text to prevent xss
+                    this.testResults[0].innerText = (message || '').toString();
+                }
             }
 
             setResults(results) {
-                // TODO: Format the results
-                this.testResults.innerHTML = (results || '').toString();
+                // Format the results
+                if (this.testResults.length > 0) {
+                    this.testResults[0].innerText = (results || '').toString();
+                }
             }
         }
     </script>
@@ -99,26 +131,11 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
 <body>
-    <div class="test-results"></div>
+    <div class="test-results">
+    </div>
 
     <div class="button-container"></div>
-    <script>
-        import('https://unpkg.com/x-weather/dist/esm/defineCustomElements.js')
-          .then(({
-            defineCustomElements
-          }) => {
-            defineCustomElements()
-          })
-      </script>
-      <x-weather
-        appid="NOT_A_REAL_APP_ID"
-        latitude="33.43"
-        longitude="-112.11"
-        placename="Phoenix, Arizona"
-      >
-        <x-current primaryscale="f"></x-current>
-        <x-forecast days="14" primaryscale="f"></x-forecast>
-      </x-weather>
+
     <script>
         'use strict';
 
